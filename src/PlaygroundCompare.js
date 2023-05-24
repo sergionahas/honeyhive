@@ -106,6 +106,9 @@ const Playground = ({apiKey}) => {
         setSelectedStopSequence(StopSequence)
     }
 
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState(null);
+
     const makeRequest = async () => {
         setError(null)
         const url = 'https://api.openai.com//v1/chat/completions';
@@ -156,6 +159,8 @@ const Playground = ({apiKey}) => {
 
             console.log(combinedMessages)
 
+            setLoading(true);
+
       
           const response = await fetch(url, {
             method: 'POST',
@@ -171,6 +176,8 @@ const Playground = ({apiKey}) => {
               stop: stopSequence
             })
           });
+
+          setLoading(false);
       
           const data = await response.json();
           setResponse(data.choices[0].message.content);
@@ -258,6 +265,16 @@ const Playground = ({apiKey}) => {
                 <div class="w-5/12 pl-2">
                     <div class="p-4">
                         <h2 class="text-xl font-bold mb-2">Model Output</h2>
+                        <div>
+                            {loading ? (
+                                <div className="">
+                                    <p className="">Loading...</p>
+                                </div>
+                            ) : (
+                                <div className="">
+                                </div>
+                            )}
+                        </div>
                         <div style={{ maxHeight: '300px', overflowY: 'scroll' }}>
                             {requestData.slice().reverse().map((request, index) => (
                                 <div key={index} className="mb-4">
