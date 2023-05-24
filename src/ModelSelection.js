@@ -66,31 +66,31 @@ function ModelSelection({ onModelChange}) {
           <li>
             <a
               className={`block w-full whitespace-nowrap bg-transparent px-4 py-2 text-sm font-normal ${
-                selectedModel === 'text-davinci-003' ? 'text-primary-500' : 'text-neutral-700'
+                selectedModel === 'gpt-4' ? 'text-primary-500' : 'text-neutral-700'
               } hover:bg-neutral-100 active:text-neutral-800 active:no-underline disabled:pointer-events-none disabled:bg-transparent disabled:text-neutral-400 dark:text-neutral-200 dark:hover:bg-neutral-600`}
               href="#"
-              onClick={() => handleModelChange('text-davinci-003')}>
-              text-davinci-003
+              onClick={() => handleModelChange('gpt-4')}>
+              gpt-4
             </a>
           </li>
           <li>
             <a
               className={`block w-full whitespace-nowrap bg-transparent px-4 py-2 text-sm font-normal ${
-                selectedModel === 'text-curie-001' ? 'text-primary-500' : 'text-neutral-700'
+                selectedModel === 'gpt-3.5-turbo' ? 'text-primary-500' : 'text-neutral-700'
               } hover:bg-neutral-100 active:text-neutral-800 active:no-underline disabled:pointer-events-none disabled:bg-transparent disabled:text-neutral-400 dark:text-neutral-200 dark:hover:bg-neutral-600`}
               href="#"
-              onClick={() => handleModelChange('text-curie-001')}>
-              text-curie-001
+              onClick={() => handleModelChange('gpt-3.5-turbo')}>
+              gpt-3.5-turbo
             </a>
           </li>
           <li>
             <a
               className={`block w-full whitespace-nowrap bg-transparent px-4 py-2 text-sm font-normal ${
-                selectedModel === 'text-davinci-002' ? 'text-primary-500' : 'text-neutral-700'
+                selectedModel === 'gpt-3.5-turbo-0301' ? 'text-primary-500' : 'text-neutral-700'
               } hover:bg-neutral-100 active:text-neutral-800 active:no-underline disabled:pointer-events-none disabled:bg-transparent disabled:text-neutral-400 dark:text-neutral-200 dark:hover:bg-neutral-600`}
               href="#"
-              onClick={() => handleModelChange('text-davinci-002')}>
-            text-davinci-002
+              onClick={() => handleModelChange('gpt-3.5-turbo-0301')}>
+            gpt-3.5-turbo-0301
             </a>
           </li>
         </ul>

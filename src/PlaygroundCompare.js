@@ -108,11 +108,11 @@ const Playground = ({apiKey}) => {
 
     const makeRequest = async () => {
         setError(null)
-        const url = 'https://api.openai.com/v1/completions';
+        const url = 'https://api.openai.com//v1/chat/completions';
       
         try {
           const userInput = document.getElementById('user-input-compare').value;
-          const model = selectedModel || 'text-davinci-003'; //default to 'text-davinci-003'
+          const model = selectedModel || 'gpt-3.5-turbo'; //default to 'gpt-3.5-turbo'
           const temperature = parseFloat(selectedTemperature) || 1;
           const tokens = parseFloat(selectedMaxToken) || 200;
           const stopSequence = selectedStopSequence || null;
@@ -131,6 +131,31 @@ const Playground = ({apiKey}) => {
           
           console.log(apiKey)
           console.log(modifiedUserInput, model, temperature, tokens, stopSequence, apiKey);
+
+          var combinedMessages = [];
+
+            for (let i = requestData.length-1; i >= 0; i--) {
+
+                combinedMessages.push({
+                    role: 'assistant',
+                    content: requestData[i].response
+                })
+
+                combinedMessages.push({
+                    role: 'user',
+                    content: requestData[i].modifiedUserInput
+                  })
+            }
+
+            combinedMessages.push({
+                role: 'user',
+                content: modifiedUserInput
+            })
+
+            console.log(modifiedUserInput)
+
+            console.log(combinedMessages)
+
       
           const response = await fetch(url, {
             method: 'POST',
@@ -140,15 +165,15 @@ const Playground = ({apiKey}) => {
             },
             body: JSON.stringify({
               model: model,
-              prompt: modifiedUserInput,
+              messages: combinedMessages,
               max_tokens: tokens,
               temperature: temperature,
-              stop: stopSequence,
+              stop: stopSequence
             })
           });
       
           const data = await response.json();
-          setResponse(data.choices[0].text);
+          setResponse(data.choices[0].message.content);
       
           // Create a new request object
           const request = {
@@ -157,7 +182,7 @@ const Playground = ({apiKey}) => {
             temperature,
             tokens,
             stopSequence,
-            response: data.choices[0].text
+            response: data.choices[0].message.content
           };
       
           // Append the request object to the requestData array
