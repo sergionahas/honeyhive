@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 const Stream = () => {
     const API_URL = "https://api.openai.com/v1/chat/completions";
-    const API_KEY = "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";
+    const API_KEY = "";
 
     const promptInput = document.getElementById("promptInput"); // equivalent of 'user-input'
     const generateBtn = document.getElementById("generateBtn");
