@@ -74,7 +74,6 @@ const Playground = ({apiKey}) => {
         checkVariables();
       }, [userInput]);
 
-    const [response, setResponse] = useState(null);
     const [error, setError] = useState(null);
     
     // Get current Model
@@ -109,10 +108,21 @@ const Playground = ({apiKey}) => {
 
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [stream, setStream] = useState([""])
+
+    let controller = null; // Store the AbortController instance
+    let tmpResponse = ""; //initiate as empty string
+    const resultText = document.getElementById("stream");
 
     const makeRequest = async () => {
-        setError(null)
+        setError(null);
         const url = 'https://api.openai.com//v1/chat/completions';
+
+        controller = new AbortController();
+        const signal = controller.signal;
+        tmpResponse = ""; //reset to empty string
+        var contents = []
+
       
         try {
           const userInput = document.getElementById('user-input').value;
@@ -120,6 +130,7 @@ const Playground = ({apiKey}) => {
           const temperature = parseFloat(selectedTemperature) || 1;
           const tokens = parseFloat(selectedMaxToken) || 200;
           const stopSequence = selectedStopSequence || null;
+        //   const resultText = document.getElementById("stream-output");
       
           const variableValues = variables.map((variable) => {
             const textarea = document.getElementById(variable.id);
@@ -132,36 +143,34 @@ const Playground = ({apiKey}) => {
             const regex = new RegExp(`{{${variable.name}}}`, 'g');
             modifiedUserInput = modifiedUserInput.replace(regex, variableValues[index]);
           });
-          
-          console.log(apiKey)
+      
+          console.log(apiKey);
           console.log(modifiedUserInput, model, temperature, tokens, stopSequence, apiKey);
-
+      
           var combinedMessages = [];
-
-            for (let i = requestData.length-1; i >= 0; i--) {
-
-                combinedMessages.push({
-                    role: 'assistant',
-                    content: requestData[i].response
-                })
-
-                combinedMessages.push({
-                    role: 'user',
-                    content: requestData[i].modifiedUserInput
-                  })
-            }
-
+      
+          for (let i = requestData.length - 1; i >= 0; i--) {
             combinedMessages.push({
-                role: 'user',
-                content: modifiedUserInput
-            })
-
-            console.log(modifiedUserInput)
-
-            console.log(combinedMessages)
-
-            setLoading(true);
-
+              role: 'assistant',
+              content: requestData[i].tmpResponse
+            });
+      
+            combinedMessages.push({
+              role: 'user',
+              content: requestData[i].modifiedUserInput
+            });
+          }
+      
+          combinedMessages.push({
+            role: 'user',
+            content: modifiedUserInput
+          });
+      
+          console.log(modifiedUserInput);
+          console.log(combinedMessages);
+      
+        //   setLoading(true);
+      
           const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -173,32 +182,89 @@ const Playground = ({apiKey}) => {
               messages: combinedMessages,
               max_tokens: tokens,
               temperature: temperature,
-              stop: stopSequence
-            })
+              stop: stopSequence,
+              stream: true,
+            }),
+            signal, // Pass the signal to the fetch request
           });
+      
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          resultText.innerText = "";
+      
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+      
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+            const parsedLines = lines
+                .map((line) => line.replace(/^data: /, "").trim()) // Remove 'data' at the beginning and trim whitespace
+                .filter((line) => line !== "" && line !== "[DONE]") // Filter out empty lines and lines with "[DONE]"
+                .map((line) => JSON.parse(line)); // Parse the JSON string
 
-          setLoading(false);
-      
-          const data = await response.json();
-          setResponse(data.choices[0].message.content);
-      
-          // Create a new request object
-          const request = {
-            modifiedUserInput,
-            model,
-            temperature,
-            tokens,
-            stopSequence,
-            response: data.choices[0].message.content
-          };
-      
-          // Append the request object to the requestData array
-          setRequestData(prevData => [...prevData, request]);
-        } catch (error) {
-          setError('An error occurred while making the request.');
+            // Now you have an array of parsed JSON objects in 'parsedLines'
+            console.log(parsedLines)
+
+            for (const parsedLine of parsedLines) {
+              const { choices } = parsedLine;
+              const { delta } = choices[0];
+              const { content } = delta;
+              // Update the UI with the new content
+              console.log("Test Reached")
+              console.log(content)
+              if (content) {
+                console.log("OK")
+                console.log(content)
+                resultText.innerText += content;
+                tmpResponse += content
+                // setStream(prevData => [...prevData, content])
+              }
+              
+            }
         }
-      };
-      
+
+        console.log("tmpResponse")
+            console.log(tmpResponse)
+            
+                
+            // Create a new request object
+            const request = {
+                modifiedUserInput,
+                model,
+                temperature,
+                tokens,
+                stopSequence,
+                tmpResponse,
+            };
+            
+            console.log(request)
+            // Append the request object to the requestData array
+            setRequestData(prevData => [...prevData, request]);
+
+    } catch (error) {
+        console.log("error l.258", error)
+      // Handle fetch request errors
+      if (signal.aborted) {
+        resultText.innerText += ". [ABORTED]";
+      } else {
+        resultText.innerText = "Error occurred while generating.";
+      }
+    } finally {
+      // Enable the generate button and disable the stop button
+      controller = null; // Reset the AbortController instance
+    }
+  };
+  
+//   const stop = () => {
+//     // Abort the fetch request by calling abort() on the AbortController instance
+//     if (controller) {
+//       controller.abort();
+//       controller = null;
+//     }
+//   };      
       
     
     return (
@@ -276,6 +342,15 @@ const Playground = ({apiKey}) => {
                             )}
                         </div>
                         <div style={{ maxHeight: '300px', overflowY: 'scroll' }}>
+                            <div className="mb-4">
+                            </div>
+                            <div id="resultContainer">
+                                <p id="stream" class="whitespace-pre-line text-sm"></p>
+                            </div>
+                            <br></br>
+                            <hr className="w-180 border-t-2 border-gray-900"></hr>
+                            <br></br>
+                            <h2 class="text-xl font-bold mb-2">Recent</h2>
                             {requestData.slice().reverse().map((request, index) => (
                                 <div key={index} className="mb-4">
                                     <p className="text-sm">Model: {request.model}</p>
@@ -288,7 +363,7 @@ const Playground = ({apiKey}) => {
                                     </p>
                                     <br></br>
                                     <p className="text-sm">
-                                        <span className="font-bold">{request.model}:</span> {request.response}
+                                        <span className="font-bold">{request.model}:</span> {request.tmpResponse}
                                     </p>
                                     <br></br>
                                     <hr className="w-180 border-t border-gray-400"></hr>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const Navbar = ({onKeyChange}) => {
+const Navbar = ({onKeyChange, onHomeChange}) => {
     const [showInput, setShowInput] = useState(false);
     const [apiKey, setApiKey] = useState('');
 
@@ -16,6 +16,18 @@ const Navbar = ({onKeyChange}) => {
       setApiKey(event.target.value);
     };
 
+    const [home, setHome] = useState(true);
+
+    const handleHome = () => {
+      if (document.getElementById("home").value == "home") {
+        setHome(true)
+      } else {
+        setHome(false)
+      }
+      onHomeChange(home)
+    };
+
+
     return (
       <nav class="bg-white border-b border-gray-100">
         <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -25,8 +37,18 @@ const Navbar = ({onKeyChange}) => {
               </div>
               <div class="hidden sm:ml-6 sm:block">
                 <div class="flex space-x-4">
-                  <a href="#" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium" aria-current="page">Playground</a>
-                  <a href="#" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium">History</a>
+                  <button
+                  id="home"
+                  value="home"
+                  onClick={handleHome}>
+                  <a href="/home" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium" aria-current="page">Playground</a>
+                  </button>
+                  <button
+                  id="history"
+                  value="history"
+                  onClick={handleHome}>
+                  <a href="/history" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium">History</a>
+                  </button>
                 </div>
               </div>
             </div>

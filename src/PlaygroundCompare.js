@@ -109,9 +109,18 @@ const Playground = ({apiKey}) => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
 
+    let controller = null;
+    let tmpResponse = ""
+    const resultText = document.getElementById("stream-compare")
+
     const makeRequest = async () => {
         setError(null)
         const url = 'https://api.openai.com//v1/chat/completions';
+
+        controller = new AbortController();
+        const signal = controller.signal;
+        tmpResponse = ""; //reset to empty string
+        var contents = []
       
         try {
           const userInput = document.getElementById('user-input-compare').value;
@@ -141,25 +150,25 @@ const Playground = ({apiKey}) => {
 
                 combinedMessages.push({
                     role: 'assistant',
-                    content: requestData[i].response
-                })
+                    content: requestData[i].tmpResponse
+                });
 
                 combinedMessages.push({
                     role: 'user',
                     content: requestData[i].modifiedUserInput
-                  })
+                  });
             }
 
             combinedMessages.push({
                 role: 'user',
                 content: modifiedUserInput
-            })
+            });
 
             console.log(modifiedUserInput)
 
             console.log(combinedMessages)
 
-            setLoading(true);
+            // setLoading(true);
 
       
           const response = await fetch(url, {
@@ -173,14 +182,55 @@ const Playground = ({apiKey}) => {
               messages: combinedMessages,
               max_tokens: tokens,
               temperature: temperature,
-              stop: stopSequence
-            })
+              stop: stopSequence,
+              stream: true,
+            }),
+            signal,
           });
 
-          setLoading(false);
+        //   setLoading(false);
+
+        const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          resultText.innerText = "";
       
-          const data = await response.json();
-          setResponse(data.choices[0].message.content);
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+      
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+            const parsedLines = lines
+                .map((line) => line.replace(/^data: /, "").trim()) // Remove 'data' at the beginning and trim whitespace
+                .filter((line) => line !== "" && line !== "[DONE]") // Filter out empty lines and lines with "[DONE]"
+                .map((line) => JSON.parse(line)); // Parse the JSON string
+
+            // Now you have an array of parsed JSON objects in 'parsedLines'
+            console.log(parsedLines)
+
+            for (const parsedLine of parsedLines) {
+              const { choices } = parsedLine;
+              const { delta } = choices[0];
+              const { content } = delta;
+              // Update the UI with the new content
+              console.log("Test Reached")
+              console.log(content)
+              if (content) {
+                console.log("OK")
+                console.log(content)
+                resultText.innerText += content;
+                tmpResponse += content
+                // setStream(prevData => [...prevData, content])
+              }
+              
+            }
+        }
+
+        console.log("tmpResponse")
+            console.log(tmpResponse)
+      
       
           // Create a new request object
           const request = {
@@ -189,13 +239,22 @@ const Playground = ({apiKey}) => {
             temperature,
             tokens,
             stopSequence,
-            response: data.choices[0].message.content
+            tmpResponse,
           };
       
           // Append the request object to the requestData array
           setRequestData(prevData => [...prevData, request]);
         } catch (error) {
-          setError('An error occurred while making the request.');
+            console.log("error l.258", error)
+            // Handle fetch request errors
+            if (signal.aborted) {
+              resultText.innerText += ". [ABORTED]";
+            } else {
+              resultText.innerText = "Error occurred while generating.";
+            }
+          } finally {
+            // Enable the generate button and disable the stop button
+            controller = null; // Reset the AbortController instance
         }
       };
       
@@ -235,7 +294,7 @@ const Playground = ({apiKey}) => {
                             <div className="mr-4 text-center" key={variable.id}>
                                 <textarea
                                 id={variable.id}
-                                className="w-full leading-tight bg-white border border-gray-300 rounded-md shadow-md focus:outline-none focus:shadow-outline h-auto resize-none overflow-hidden text-md"
+                                className="w-full bg-white border border-gray-300 rounded-md shadow-md focus:outline-none focus:shadow-outline h-auto resize-none overflow-hidden text-sm"
                                 rows="1"
                                 placeholder=""
                                 ></textarea>
@@ -276,6 +335,15 @@ const Playground = ({apiKey}) => {
                             )}
                         </div>
                         <div style={{ maxHeight: '300px', overflowY: 'scroll' }}>
+                        <div className="mb-4">
+                            </div>
+                            <div id="resultContainer">
+                                <p id="stream-compare" class="whitespace-pre-line text-sm"></p>
+                            </div>
+                            <br></br>
+                            <hr className="w-180 border-t-2 border-gray-900"></hr>
+                            <br></br>
+                            <h2 class="text-xl font-bold mb-2">Recent</h2>
                             {requestData.slice().reverse().map((request, index) => (
                                 <div key={index} className="mb-4">
                                     <p className="text-sm">Model: {request.model}</p>
