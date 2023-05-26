@@ -200,6 +200,7 @@ const Playground = ({apiKey}) => {
       
             const chunk = decoder.decode(value);
             const lines = chunk.split("\n");
+            console.log(lines)
             const parsedLines = lines
                 .map((line) => line.replace(/^data: /, "").trim()) // Remove 'data' at the beginning and trim whitespace
                 .filter((line) => line !== "" && line !== "[DONE]") // Filter out empty lines and lines with "[DONE]"
@@ -226,8 +227,9 @@ const Playground = ({apiKey}) => {
             }
         }
 
-        console.log("tmpResponse")
+            console.log("tmpResponse")
             console.log(tmpResponse)
+            var timeStamp = new Date().toLocaleString();
             
                 
             // Create a new request object
@@ -238,6 +240,7 @@ const Playground = ({apiKey}) => {
                 tokens,
                 stopSequence,
                 tmpResponse,
+                timeStamp,
             };
             
             console.log(request)
@@ -353,6 +356,7 @@ const Playground = ({apiKey}) => {
                             <h2 class="text-xl font-bold mb-2">Recent</h2>
                             {requestData.slice().reverse().map((request, index) => (
                                 <div key={index} className="mb-4">
+                                    <p className="text-sm">Time: {request.timeStamp}</p>
                                     <p className="text-sm">Model: {request.model}</p>
                                     <p className="text-sm">Temperature: {request.temperature}</p>
                                     <p className="text-sm">Tokens: {request.tokens}</p>

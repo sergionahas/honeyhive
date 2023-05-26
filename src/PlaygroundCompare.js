@@ -356,7 +356,7 @@ const Playground = ({apiKey}) => {
                                     </p>
                                     <br></br>
                                     <p className="text-sm">
-                                        <span className="font-bold">{request.model}:</span> {request.response}
+                                        <span className="font-bold">{request.model}:</span> {request.tmpResponse}
                                     </p>
                                     <br></br>
                                     <hr className="w-180 border-t border-gray-400"></hr>
