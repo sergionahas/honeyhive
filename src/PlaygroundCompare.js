@@ -230,6 +230,7 @@ const Playground = ({apiKey}) => {
 
         console.log("tmpResponse")
             console.log(tmpResponse)
+            var timeStamp = new Date().toLocaleString();
       
       
           // Create a new request object
@@ -240,6 +241,7 @@ const Playground = ({apiKey}) => {
             tokens,
             stopSequence,
             tmpResponse,
+            timeStamp,
           };
       
           // Append the request object to the requestData array
@@ -346,6 +348,7 @@ const Playground = ({apiKey}) => {
                             <h2 class="text-xl font-bold mb-2">Recent</h2>
                             {requestData.slice().reverse().map((request, index) => (
                                 <div key={index} className="mb-4">
+                                    <p className="text-sm">Time: {request.timeStamp}</p>
                                     <p className="text-sm">Model: {request.model}</p>
                                     <p className="text-sm">Temperature: {request.temperature}</p>
                                     <p className="text-sm">Tokens: {request.tokens}</p>
