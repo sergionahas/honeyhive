@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 const Navbar = ({onKeyChange, onHomeChange}) => {
-    const [showInput, setShowInput] = useState(false);
+    const [showInput, setShowInput] = useState(true);
     const [apiKey, setApiKey] = useState('');
 
     const handleClick = () => {
