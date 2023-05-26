@@ -41,7 +41,7 @@ const Navbar = ({onKeyChange, onHomeChange}) => {
                   id="home"
                   value="home"
                   onClick={handleHome}>
-                  <a href="/home" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium" aria-current="page">Playground</a>
+                  <a href="/honeyhive" class="text-black hover:bg-gray-100 hover:text-black rounded-lg px-3 py-2 text-sm font-medium" aria-current="page">Playground</a>
                   </button>
                   <button
                   id="history"
